@@ -12,7 +12,7 @@ import { UsersModule } from './users/users.module';
       host: 'localhost',
       port: 5432,
       username: 'postgres',
-      password: 'r7eam',
+      password: 'Admin7',
       database: 'craftsmen_mosul',
       autoLoadEntities: true,
       synchronize: true,
