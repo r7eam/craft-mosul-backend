@@ -34,6 +34,16 @@ export class User {
   @Column({ nullable: true })
   profile_image: string;
 
+  // New fields from database schema
+  @Column({ default: false })
+  email_verified: boolean;
+
+  @Column({ default: false })
+  phone_verified: boolean;
+
+  @Column({ nullable: true })
+  last_login: Date;
+
   @Column({ default: true })
   is_active: boolean;
 
