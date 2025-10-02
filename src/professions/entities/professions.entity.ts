@@ -1,29 +1,19 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn } from "typeorm";
 
 @Entity('professions')
 export class Profession {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
-  @Column()
+  @Column({ length: 100, unique: true })
   name: string;
 
-  @Column({ nullable: true })
-  description?: string;
-
-  @Column()
-  city: string;
-
-  @Column()
-  area: string;
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
   @Column({ default: true })
-  isActive: boolean;
+  is_active: boolean;
 
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
-  updatedAt: Date;
-
+  @CreateDateColumn()
+  created_at: Date;
 }

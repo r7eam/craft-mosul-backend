@@ -1,0 +1,52 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+import { RequestsService } from './requests.service';
+import { CreateRequestDto } from './dto/create-request.dto';
+import { UpdateRequestDto } from './dto/update-request.dto';
+
+@Controller('requests')
+export class RequestsController {
+  constructor(private readonly requestsService: RequestsService) {}
+
+  @Post()
+  create(@Body() dto: CreateRequestDto) {
+    return this.requestsService.create(dto);
+  }
+
+  @Get()
+  findAll() {
+    return this.requestsService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.requestsService.findOne(+id);
+  }
+
+  @Get('client/:clientId')
+  findByClientId(@Param('clientId') clientId: string) {
+    return this.requestsService.findByClientId(+clientId);
+  }
+
+  @Get('worker/:workerId')
+  findByWorkerId(@Param('workerId') workerId: string) {
+    return this.requestsService.findByWorkerId(+workerId);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateRequestDto) {
+    return this.requestsService.update(+id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.requestsService.remove(+id);
+  }
+}

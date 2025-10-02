@@ -9,6 +9,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Profession } from '../../professions/entities/professions.entity';
 
 @Entity('workers')
 export class Worker {
@@ -24,6 +25,10 @@ export class Worker {
 
   @Column()
   profession_id: number;
+
+  @ManyToOne(() => Profession)
+  @JoinColumn({ name: 'profession_id' })
+  profession: Profession;
 
   @Column({ type: 'text', nullable: true })
   bio: string;

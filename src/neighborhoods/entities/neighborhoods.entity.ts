@@ -1,29 +1,16 @@
-import{ Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity('neighborhoods')
 export class Neighborhood {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
-  @Column()
+  @Column({ length: 100, unique: true })
   name: string;
 
-  @Column({ nullable: true })
-  description?: string;
+  @Column({ length: 50 })
+  area: 'الساحل الأيمن' | 'الساحل الأيسر';
 
-  @Column()
-  city: string;
-
-  @Column()
-  area: string;
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
-  updatedAt: Date;
-
+  @CreateDateColumn()
+  created_at: Date;
 }

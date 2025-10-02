@@ -1,20 +1,15 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
-export class UpdateNeighborhoodDto {
+export class CreateProfessionDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  city: string;
+  description?: string;
 
-  @IsString()
-  @IsNotEmpty()
-  area: string;
-
-  @IsString()
-    @IsNotEmpty()
-  description: string;
-  
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
 }

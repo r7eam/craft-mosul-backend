@@ -1,15 +1,4 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateProfessionDto } from './create-professions.dto';
 
-export class UpdateNeighborhoodDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @IsString()
-  @IsNotEmpty()
-  city: string;
-
-  @IsString()
-  @IsNotEmpty()
-  area: string;
-}
+export class UpdateProfessionDto extends PartialType(CreateProfessionDto) {}

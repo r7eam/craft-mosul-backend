@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsIn } from 'class-validator';
 
 export class CreateNeighborhoodDto {
   @IsString()
@@ -6,14 +6,6 @@ export class CreateNeighborhoodDto {
   name: string;
 
   @IsString()
-  @IsOptional()
-  description?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  city: string;
-
-  @IsString()
-  @IsNotEmpty()
-  area: string;
+  @IsIn(['الساحل الأيمن', 'الساحل الأيسر'])
+  area: 'الساحل الأيمن' | 'الساحل الأيسر';
 }

@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Neighborhood } from '../../neighborhoods/entities/neighborhoods.entity';
 
 @Entity('users')
 export class User {
@@ -30,6 +31,10 @@ export class User {
 
   @Column({ nullable: true })
   neighborhood_id: number;
+
+  @ManyToOne(() => Neighborhood)
+  @JoinColumn({ name: 'neighborhood_id' })
+  neighborhood: Neighborhood;
 
   @Column({ nullable: true })
   profile_image: string;
