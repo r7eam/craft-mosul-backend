@@ -1,18 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WorkerPortfolio } from './entities/worker-portfolio.entity';
 import { CreateWorkerPortfolioDto } from './dto/create-worker-portfolio.dto';
 import { UpdateWorkerPortfolioDto } from './dto/update-worker-portfolio.dto';
+import { Worker } from '../workers/entities/worker.entity';
 
 @Injectable()
 export class WorkerPortfolioService {
   constructor(
     @InjectRepository(WorkerPortfolio)
     private workerPortfolioRepository: Repository<WorkerPortfolio>,
+    @InjectRepository(Worker)
+    private workersRepository: Repository<Worker>,
   ) {}
 
-  create(dto: CreateWorkerPortfolioDto) {
+  async create(dto: CreateWorkerPortfolioDto, user: any) {
+    // For workers, ensure they can only add to their own portfolio
+    if (user.role === 'worker') {
+      const worker = await this.workersRepository.findOne({
+        where: { user_id: user.id },
+      });
+      
+      if (!worker) {
+        throw new NotFoundException('Worker profile not found');
+      }
+      
+      if (dto.worker_id !== worker.id) {
+        throw new ForbiddenException('You can only add to your own portfolio');
+      }
+    }
+    
     const portfolio = this.workerPortfolioRepository.create(dto);
     return this.workerPortfolioRepository.save(portfolio);
   }
@@ -39,14 +57,38 @@ export class WorkerPortfolioService {
     });
   }
 
-  async update(id: number, dto: UpdateWorkerPortfolioDto) {
+  async update(id: number, dto: UpdateWorkerPortfolioDto, user: any) {
     const portfolio = await this.findOne(id);
+    
+    // For workers, ensure they can only update their own portfolio items
+    if (user.role === 'worker') {
+      const worker = await this.workersRepository.findOne({
+        where: { user_id: user.id },
+      });
+      
+      if (!worker || portfolio.worker_id !== worker.id) {
+        throw new ForbiddenException('You can only update your own portfolio items');
+      }
+    }
+    
     Object.assign(portfolio, dto);
     return this.workerPortfolioRepository.save(portfolio);
   }
 
-  async remove(id: number) {
+  async remove(id: number, user: any) {
     const portfolio = await this.findOne(id);
+    
+    // For workers, ensure they can only delete their own portfolio items
+    if (user.role === 'worker') {
+      const worker = await this.workersRepository.findOne({
+        where: { user_id: user.id },
+      });
+      
+      if (!worker || portfolio.worker_id !== worker.id) {
+        throw new ForbiddenException('You can only delete your own portfolio items');
+      }
+    }
+    
     return this.workerPortfolioRepository.remove(portfolio);
   }
 }

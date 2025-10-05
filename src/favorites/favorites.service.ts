@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Favorite } from './entities/favorite.entity';
@@ -12,8 +12,11 @@ export class FavoritesService {
     private favoritesRepository: Repository<Favorite>,
   ) {}
 
-  create(dto: CreateFavoriteDto) {
-    const favorite = this.favoritesRepository.create(dto);
+  create(dto: CreateFavoriteDto, clientId: number) {
+    const favorite = this.favoritesRepository.create({
+      ...dto,
+      client_id: clientId, // Enforce client_id from JWT
+    });
     return this.favoritesRepository.save(favorite);
   }
 
@@ -32,7 +35,12 @@ export class FavoritesService {
     return favorite;
   }
 
-  findByClientId(clientId: number) {
+  findByClientId(clientId: number, user: any) {
+    // Ensure user can only see their own favorites
+    if (user.role === 'client' && user.id !== clientId) {
+      throw new ForbiddenException('You can only view your own favorites');
+    }
+    
     return this.favoritesRepository.find({
       where: { client_id: clientId },
       relations: ['client', 'worker'],
@@ -57,7 +65,12 @@ export class FavoritesService {
     return this.favoritesRepository.remove(favorite);
   }
 
-  async removeByClientAndWorker(clientId: number, workerId: number) {
+  async removeByClientAndWorker(clientId: number, workerId: number, user: any) {
+    // Ensure user can only remove their own favorites
+    if (user.role === 'client' && user.id !== clientId) {
+      throw new ForbiddenException('You can only remove your own favorites');
+    }
+    
     const favorite = await this.findByClientAndWorker(clientId, workerId);
     if (!favorite) throw new NotFoundException(`Favorite not found`);
     return this.favoritesRepository.remove(favorite);

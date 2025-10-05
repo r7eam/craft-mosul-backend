@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Request } from './entities/request.entity';
@@ -12,8 +12,12 @@ export class RequestsService {
     private requestsRepository: Repository<Request>,
   ) {}
 
-  create(dto: CreateRequestDto) {
-    const request = this.requestsRepository.create(dto);
+  create(dto: CreateRequestDto, clientId: number) {
+    const request = this.requestsRepository.create({
+      ...dto,
+      client_id: clientId, // Enforce client_id from JWT
+      status: 'pending', // Force initial status
+    });
     return this.requestsRepository.save(request);
   }
 
@@ -46,8 +50,17 @@ export class RequestsService {
     });
   }
 
-  async update(id: number, dto: UpdateRequestDto) {
+  async update(id: number, dto: UpdateRequestDto, user: any) {
     const request = await this.findOne(id);
+    
+    // Ownership check: client can modify their requests, worker can modify requests assigned to them
+    if (user.role === 'client' && request.client_id !== user.id) {
+      throw new ForbiddenException('You can only modify your own requests');
+    }
+    if (user.role === 'worker' && request.worker_id !== user.id) {
+      throw new ForbiddenException('You can only modify requests assigned to you');
+    }
+    
     Object.assign(request, dto);
     
     // Set completed_at when status changes to completed

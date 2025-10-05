@@ -13,15 +13,19 @@ import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorators';
+import { CurrentUser } from '../auth/decorators/current-user.decorators';
 
 @Controller('requests')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
+  @Roles('client')
   @Post()
-  create(@Body() dto: CreateRequestDto) {
-    return this.requestsService.create(dto);
+  create(@Body() dto: CreateRequestDto, @CurrentUser() user: any) {
+    return this.requestsService.create(dto, user.id);
   }
 
   @Public()
@@ -48,11 +52,13 @@ export class RequestsController {
     return this.requestsService.findByWorkerId(+workerId);
   }
 
+  @Roles('client', 'worker')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateRequestDto) {
-    return this.requestsService.update(+id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateRequestDto, @CurrentUser() user: any) {
+    return this.requestsService.update(+id, dto, user);
   }
 
+  @Roles('client', 'admin')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.requestsService.remove(+id);
