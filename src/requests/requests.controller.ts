@@ -11,6 +11,7 @@ import {
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
+import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -56,6 +57,12 @@ export class RequestsController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateRequestDto, @CurrentUser() user: any) {
     return this.requestsService.update(+id, dto, user);
+  }
+
+  @Roles('client', 'worker', 'admin')
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateRequestStatusDto, @CurrentUser() user: any) {
+    return this.requestsService.updateStatus(+id, dto, user);
   }
 
   @Roles('client', 'admin')

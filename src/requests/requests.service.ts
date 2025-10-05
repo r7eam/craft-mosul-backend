@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Request } from './entities/request.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
+import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
 
 @Injectable()
 export class RequestsService {
@@ -63,12 +64,75 @@ export class RequestsService {
     
     Object.assign(request, dto);
     
+    return this.requestsRepository.save(request);
+  }
+
+  async updateStatus(id: number, dto: UpdateRequestStatusDto, user: any) {
+    const request = await this.findOne(id);
+    
+    // Validate ownership and permissions
+    this.validateStatusUpdatePermissions(request, dto.status, user);
+    
+    // Validate status transition
+    this.validateStatusTransition(request.status, dto.status);
+    
+    // Update request
+    request.status = dto.status;
+    if (dto.rejected_reason) {
+      request.rejected_reason = dto.rejected_reason;
+    }
+    
     // Set completed_at when status changes to completed
     if (dto.status === 'completed') {
       request.completed_at = new Date();
     }
     
     return this.requestsRepository.save(request);
+  }
+
+  private validateStatusUpdatePermissions(request: Request, newStatus: string, user: any) {
+    // Client permissions
+    if (user.role === 'client') {
+      // Client can only modify their own requests
+      if (request.client_id !== user.id) {
+        throw new ForbiddenException('You can only modify your own requests');
+      }
+      // Client can only cancel their requests
+      if (newStatus !== 'cancelled') {
+        throw new ForbiddenException('Clients can only cancel their requests');
+      }
+    }
+    
+    // Worker permissions  
+    if (user.role === 'worker') {
+      // Worker can only modify requests assigned to them
+      if (request.worker_id !== user.id) {
+        throw new ForbiddenException('You can only modify requests assigned to you');
+      }
+      // Worker can accept, reject, or complete requests
+      if (!['accepted', 'rejected', 'completed'].includes(newStatus)) {
+        throw new ForbiddenException('Workers can only accept, reject, or complete requests');
+      }
+    }
+    
+    // Admin can update any request to any status (no restrictions)
+  }
+
+  private validateStatusTransition(currentStatus: string, newStatus: string) {
+    const allowedTransitions: Record<string, string[]> = {
+      'pending': ['accepted', 'rejected', 'cancelled'],
+      'accepted': ['completed', 'cancelled'],
+      'rejected': [], // No transitions from rejected
+      'completed': [], // No transitions from completed
+      'cancelled': [], // No transitions from cancelled
+    };
+
+    const allowed = allowedTransitions[currentStatus] || [];
+    if (!allowed.includes(newStatus)) {
+      throw new BadRequestException(
+        `Cannot transition from '${currentStatus}' to '${newStatus}'. Allowed transitions: [${allowed.join(', ')}]`
+      );
+    }
   }
 
   async remove(id: number) {
