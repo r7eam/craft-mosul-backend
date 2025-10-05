@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Neighborhood } from '../../neighborhoods/entities/neighborhoods.entity';
 
 @Entity('users')
@@ -23,6 +24,7 @@ export class User {
   @Column({ length: 20, unique: true })
   phone: string;
 
+  @Exclude()
   @Column({ length: 255 })
   password: string;
 
