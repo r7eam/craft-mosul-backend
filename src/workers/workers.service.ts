@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Worker } from './entities/worker.entity';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
+import { FindWorkersQueryDto } from './dto/find-workers-query.dto';
 
 @Injectable()
 export class WorkersService {
@@ -17,16 +18,106 @@ export class WorkersService {
     return this.workersRepository.save(worker);
   }
 
-  findAll() {
-    return this.workersRepository.find({
-      relations: ['user'],
-    });
+  findAll(query: FindWorkersQueryDto = {}) {
+    const {
+      profession_id,
+      neighborhood_id,
+      area,
+      is_available,
+      min_rating,
+      search,
+      sort = 'recent',
+      order = 'DESC',
+      page = 1,
+      limit = 20,
+    } = query;
+
+    const queryBuilder: SelectQueryBuilder<Worker> = this.workersRepository
+      .createQueryBuilder('worker')
+      .leftJoinAndSelect('worker.user', 'user')
+      .leftJoinAndSelect('worker.profession', 'profession')
+      .leftJoinAndSelect('user.neighborhood', 'neighborhood');
+
+    // Apply filters
+    if (profession_id) {
+      queryBuilder.andWhere('worker.profession_id = :profession_id', { profession_id });
+    }
+
+    if (neighborhood_id) {
+      queryBuilder.andWhere('user.neighborhood_id = :neighborhood_id', { neighborhood_id });
+    }
+
+    if (area) {
+      queryBuilder.andWhere('neighborhood.area = :area', { area });
+    }
+
+    if (typeof is_available === 'boolean') {
+      queryBuilder.andWhere('worker.is_available = :is_available', { is_available });
+    }
+
+    if (min_rating) {
+      queryBuilder.andWhere('worker.average_rating >= :min_rating', { min_rating });
+    }
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.name ILIKE :search OR worker.bio ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    // Apply sorting
+    switch (sort) {
+      case 'rating':
+        queryBuilder.orderBy('worker.average_rating', order);
+        break;
+      case 'experience':
+        queryBuilder.orderBy('worker.experience_years', order);
+        break;
+      case 'jobs':
+        queryBuilder.orderBy('worker.total_jobs', order);
+        break;
+      case 'name':
+        queryBuilder.orderBy('user.name', order);
+        break;
+      case 'recent':
+      default:
+        queryBuilder.orderBy('worker.created_at', order);
+        break;
+    }
+
+    // Apply pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    return this.getPaginatedResult(queryBuilder, page, limit);
+  }
+
+  private async getPaginatedResult(
+    queryBuilder: SelectQueryBuilder<Worker>,
+    page: number,
+    limit: number,
+  ) {
+    const [workers, total] = await queryBuilder.getManyAndCount();
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: workers,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findOne(id: number) {
     const worker = await this.workersRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'profession', 'user.neighborhood'],
     });
     if (!worker) throw new NotFoundException(`Worker ${id} not found`);
     return worker;
@@ -35,7 +126,7 @@ export class WorkersService {
   async findByUserId(userId: number) {
     const worker = await this.workersRepository.findOne({
       where: { user_id: userId },
-      relations: ['user'],
+      relations: ['user', 'profession', 'user.neighborhood'],
     });
     if (!worker) throw new NotFoundException(`Worker with user_id ${userId} not found`);
     return worker;

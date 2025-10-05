@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -17,6 +18,7 @@ import { extname } from 'path';
 import { WorkersService } from './workers.service';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
+import { FindWorkersQueryDto } from './dto/find-workers-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -68,8 +70,8 @@ export class WorkersController {
 
   @Public()
   @Get()
-  findAll() {
-    return this.workersService.findAll();
+  findAll(@Query() query: FindWorkersQueryDto) {
+    return this.workersService.findAll(query);
   }
 
   @Public()
