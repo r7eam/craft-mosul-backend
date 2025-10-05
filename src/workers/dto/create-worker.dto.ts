@@ -41,4 +41,9 @@ export class CreateWorkerDto {
   @IsOptional()
   @IsBoolean()
   is_available?: boolean;
+
+  // Profile image
+  @IsOptional()
+  @IsString()
+  profile_image?: string;
 }

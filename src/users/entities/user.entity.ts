@@ -38,9 +38,6 @@ export class User {
   @JoinColumn({ name: 'neighborhood_id' })
   neighborhood: Neighborhood;
 
-  @Column({ nullable: true })
-  profile_image: string;
-
   // New fields from database schema
   @Column({ default: false })
   email_verified: boolean;

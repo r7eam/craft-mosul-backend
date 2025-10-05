@@ -59,6 +59,9 @@ export class Worker {
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0.00 })
   average_rating: number;
 
+  @Column({ nullable: true })
+  profile_image: string;
+
   @CreateDateColumn()
   created_at: Date;
 
