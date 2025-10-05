@@ -12,12 +12,34 @@ export class FavoritesService {
     private favoritesRepository: Repository<Favorite>,
   ) {}
 
-  create(dto: CreateFavoriteDto, clientId: number) {
+  async create(dto: CreateFavoriteDto, clientId: number) {
+    // Check if favorite already exists
+    const existingFavorite = await this.findByClientAndWorker(clientId, dto.worker_id);
+    
+    if (existingFavorite) {
+      // Return existing favorite for idempotent behavior
+      return existingFavorite;
+    }
+    
+    // Create new favorite
     const favorite = this.favoritesRepository.create({
       ...dto,
       client_id: clientId, // Enforce client_id from JWT
     });
-    return this.favoritesRepository.save(favorite);
+    
+    try {
+      return await this.favoritesRepository.save(favorite);
+    } catch (error) {
+      // Handle unique constraint violation gracefully
+      if (error.code === '23505' || error.message.includes('duplicate') || error.message.includes('unique')) {
+        // Race condition: favorite was created by another request
+        const existingFavorite = await this.findByClientAndWorker(clientId, dto.worker_id);
+        if (existingFavorite) {
+          return existingFavorite;
+        }
+      }
+      throw error; // Re-throw if not a duplicate error
+    }
   }
 
   findAll() {
