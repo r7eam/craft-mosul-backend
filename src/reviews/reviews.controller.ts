@@ -48,13 +48,13 @@ export class ReviewsController {
 
   @Roles('client', 'admin')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateReviewDto) {
-    return this.reviewsService.update(+id, dto);
+  update(@Param('id') id: string, @Body() dto: UpdateReviewDto, @CurrentUser() user: any) {
+    return this.reviewsService.update(+id, dto, user);
   }
 
   @Roles('client', 'admin')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reviewsService.remove(+id);
+  remove(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.reviewsService.remove(+id, user);
   }
 }

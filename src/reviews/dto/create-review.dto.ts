@@ -6,14 +6,6 @@ export class CreateReviewDto {
   request_id: number;
 
   @IsNumber()
-  @IsPositive()
-  worker_id: number;
-
-  @IsNumber()
-  @IsPositive()
-  client_id: number;
-
-  @IsNumber()
   @Min(1)
   @Max(5)
   rating: number;

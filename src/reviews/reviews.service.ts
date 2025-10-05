@@ -5,6 +5,7 @@ import { Review } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { Request } from '../requests/entities/request.entity';
+import { Worker } from '../workers/entities/worker.entity';
 
 @Injectable()
 export class ReviewsService {
@@ -13,6 +14,8 @@ export class ReviewsService {
     private reviewsRepository: Repository<Review>,
     @InjectRepository(Request)
     private requestsRepository: Repository<Request>,
+    @InjectRepository(Worker)
+    private workersRepository: Repository<Worker>,
   ) {}
 
   async create(dto: CreateReviewDto, clientId: number) {
@@ -46,9 +49,15 @@ export class ReviewsService {
     const review = this.reviewsRepository.create({
       ...dto,
       client_id: clientId, // Enforce client_id from JWT
+      worker_id: request.worker_id, // Ensure worker_id matches request
     });
     
-    return this.reviewsRepository.save(review);
+    const savedReview = await this.reviewsRepository.save(review);
+    
+    // Recalculate worker's average rating
+    await this.recalculateWorkerRating(request.worker_id);
+    
+    return savedReview;
   }
 
   findAll() {
@@ -73,14 +82,59 @@ export class ReviewsService {
     });
   }
 
-  async update(id: number, dto: UpdateReviewDto) {
+  async update(id: number, dto: UpdateReviewDto, user: any) {
     const review = await this.findOne(id);
+    
+    // Only the client who created the review can update it (or admin)
+    if (user.role === 'client' && review.client_id !== user.id) {
+      throw new ForbiddenException('You can only update your own reviews');
+    }
+    
+    const oldRating = review.rating;
     Object.assign(review, dto);
-    return this.reviewsRepository.save(review);
+    const updatedReview = await this.reviewsRepository.save(review);
+    
+    // Recalculate worker's average rating if rating changed
+    if (dto.rating !== undefined && dto.rating !== oldRating) {
+      await this.recalculateWorkerRating(review.worker_id);
+    }
+    
+    return updatedReview;
   }
 
-  async remove(id: number) {
+  async remove(id: number, user: any) {
     const review = await this.findOne(id);
-    return this.reviewsRepository.remove(review);
+    
+    // Only the client who created the review can delete it (or admin)
+    if (user.role === 'client' && review.client_id !== user.id) {
+      throw new ForbiddenException('You can only delete your own reviews');
+    }
+    
+    const workerId = review.worker_id;
+    const removedReview = await this.reviewsRepository.remove(review);
+    
+    // Recalculate worker's average rating after deletion
+    await this.recalculateWorkerRating(workerId);
+    
+    return removedReview;
+  }
+
+  private async recalculateWorkerRating(workerId: number) {
+    const reviews = await this.reviewsRepository.find({
+      where: { worker_id: workerId },
+    });
+    
+    let averageRating = 0;
+    let totalJobs = reviews.length; // Each review represents a completed job
+    
+    if (reviews.length > 0) {
+      const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+      averageRating = Math.round((totalRating / reviews.length) * 100) / 100; // Round to 2 decimal places
+    }
+    
+    await this.workersRepository.update(workerId, {
+      average_rating: averageRating,
+      total_jobs: totalJobs, // Update total jobs count as well
+    });
   }
 }
