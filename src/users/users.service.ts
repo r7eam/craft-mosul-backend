@@ -33,6 +33,14 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async updateLastLogin(id: number) {
+    await this.usersRepository.update(id, { last_login: new Date() });
+  }
+
+  async findByPhone(phone: string) {
+    return this.usersRepository.findOne({ where: { phone } });
+  }
+
   async remove(id: number) {
     const user = await this.findOne(id);
     return this.usersRepository.remove(user);

@@ -11,6 +11,7 @@ import { WorkerPortfolioModule } from './worker-portfolio/worker-portfolio.modul
 import { RequestsModule } from './requests/requests.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { FavoritesModule } from './favorites/favorites.module';
     RequestsModule,
     ReviewsModule,
     FavoritesModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
