@@ -15,6 +15,15 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBearerAuth, 
+  ApiConsumes, 
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { WorkersService } from './workers.service';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
@@ -57,23 +66,43 @@ const workerProfileImageStorage = {
   },
 };
 
+@ApiTags('workers')
 @Controller('workers')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 export class WorkersController {
   constructor(private readonly workersService: WorkersService) {}
 
+  @ApiOperation({ summary: 'Create a new worker profile' })
+  @ApiResponse({ status: 201, description: 'Worker profile created successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Only workers and admins can create profiles' })
   @Roles('worker', 'admin')
   @Post()
   create(@Body() dto: CreateWorkerDto) {
     return this.workersService.create(dto);
   }
 
+  @ApiOperation({ summary: 'Get all workers with filtering and pagination' })
+  @ApiResponse({ status: 200, description: 'List of workers with pagination metadata' })
+  @ApiQuery({ name: 'profession_id', required: false, description: 'Filter by profession ID' })
+  @ApiQuery({ name: 'neighborhood_id', required: false, description: 'Filter by neighborhood ID' })
+  @ApiQuery({ name: 'area', required: false, description: 'Filter by area name (Arabic)' })
+  @ApiQuery({ name: 'is_available', required: false, description: 'Filter by availability status' })
+  @ApiQuery({ name: 'min_rating', required: false, description: 'Minimum rating filter' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search in name and bio' })
+  @ApiQuery({ name: 'sort', required: false, enum: ['rating', 'experience', 'jobs', 'name', 'recent'] })
+  @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @Public()
   @Get()
   findAll(@Query() query: FindWorkersQueryDto) {
     return this.workersService.findAll(query);
   }
 
+  @ApiOperation({ summary: 'Get worker by ID' })
+  @ApiResponse({ status: 200, description: 'Worker profile found' })
+  @ApiResponse({ status: 404, description: 'Worker not found' })
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -98,6 +127,23 @@ export class WorkersController {
     return this.workersService.remove(+id);
   }
 
+  @ApiOperation({ summary: 'Upload worker profile image' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Worker profile image',
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Profile image uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'No file uploaded or invalid file type' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Can only upload own profile image' })
   @Roles('worker', 'admin')
   @Post(':id/upload-profile-image')
   @UseInterceptors(FileInterceptor('image', workerProfileImageStorage))

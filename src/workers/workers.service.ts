@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Worker } from './entities/worker.entity';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
 import { FindWorkersQueryDto } from './dto/find-workers-query.dto';
+import { createPaginatedResponse, PaginatedResponseDto } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class WorkersService {
@@ -18,7 +19,7 @@ export class WorkersService {
     return this.workersRepository.save(worker);
   }
 
-  findAll(query: FindWorkersQueryDto = {}) {
+  async findAll(query: FindWorkersQueryDto = {}): Promise<PaginatedResponseDto<Worker>> {
     const {
       profession_id,
       neighborhood_id,
@@ -97,21 +98,9 @@ export class WorkersService {
     queryBuilder: SelectQueryBuilder<Worker>,
     page: number,
     limit: number,
-  ) {
+  ): Promise<PaginatedResponseDto<Worker>> {
     const [workers, total] = await queryBuilder.getManyAndCount();
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data: workers,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
-    };
+    return createPaginatedResponse(workers, total, page, limit);
   }
 
   async findOne(id: number) {
