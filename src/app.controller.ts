@@ -1,8 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { Public } from './auth/decorators/public.decorator';
 
+@ApiTags('app')
 @Controller()
 @ApiBearerAuth('JWT-auth')
 export class AppController {

@@ -7,13 +7,14 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ProfessionsService } from './professions.service';
 import { CreateProfessionDto } from './dto/create-professions.dto';
 import { UpdateProfessionDto } from './dto/update-professions.dto';
 import { Roles } from '../auth/decorators/roles.decorators';
 import { Public } from '../auth/decorators/public.decorator';
 
+@ApiTags('professions')
 @Controller('professions')
 @ApiBearerAuth('JWT-auth')
 export class ProfessionsController {

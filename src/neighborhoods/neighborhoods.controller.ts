@@ -7,13 +7,14 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { NeighborhoodsService } from './neighborhoods.service';
 import { CreateNeighborhoodDto } from './dto/create-neighborhoods.dto';
 import { UpdateNeighborhoodDto } from './dto/update-neighborhoods.dto';
 import { Roles } from '../auth/decorators/roles.decorators';
 import { Public } from '../auth/decorators/public.decorator';
 
+@ApiTags('neighborhoods')
 @Controller('neighborhoods')
 @ApiBearerAuth('JWT-auth')
 export class NeighborhoodsController {
