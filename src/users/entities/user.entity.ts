@@ -29,7 +29,7 @@ export class User {
   password: string;
 
   @Column({ type: 'varchar', length: 20 })
-  role: 'client' | 'worker';
+  role: 'client' | 'worker' | 'admin';
 
   @Column({ nullable: true })
   neighborhood_id: number;

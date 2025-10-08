@@ -16,6 +16,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { SeedService } from './seed.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -24,14 +25,19 @@ import { CurrentUser } from './decorators/current-user.decorators';
 import { Public } from './decorators/public.decorator';
 
 @ApiTags('auth')
+@ApiBearerAuth('JWT-auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private seedService: SeedService,
+  ) {}
 
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
@@ -41,6 +47,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'Login successful, returns JWT token' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -48,13 +55,22 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Create admin user (for initial setup)' })
+  @ApiResponse({ status: 201, description: 'Admin user created successfully' })
+  @ApiBearerAuth('JWT-auth')
+  @Public()
+  @Post('seed-admin')
+  async seedAdmin() {
+    return this.seedService.createAdminUser();
+  }
+
+  @ApiBearerAuth('JWT-auth')
   @Get('profile')
   async getProfile(@CurrentUser() user: any) {
     return this.authService.getProfile(user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @Patch('change-password')
   async changePassword(
     @CurrentUser() user: any,
@@ -63,7 +79,7 @@ export class AuthController {
     return this.authService.changePassword(user.id, changePasswordDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout() {

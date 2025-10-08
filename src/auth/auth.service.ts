@@ -71,10 +71,24 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    // Find user by phone
-    const user = await this.usersService.findByPhone(loginDto.phone);
-    if (!user) {
-      throw new UnauthorizedException('Invalid phone number or password');
+    let user;
+
+    // Validate that either phone or email is provided
+    if (!loginDto.phone && !loginDto.email) {
+      throw new BadRequestException('Either phone or email must be provided');
+    }
+
+    // Find user by phone or email
+    if (loginDto.phone) {
+      user = await this.usersService.findByPhone(loginDto.phone);
+      if (!user) {
+        throw new UnauthorizedException('Invalid phone number or password');
+      }
+    } else if (loginDto.email) {
+      user = await this.usersService.findByEmail(loginDto.email);
+      if (!user) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
     }
 
     // Check if user is active
@@ -85,7 +99,7 @@ export class AuthService {
     // Verify password
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid phone number or password');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // Update last login

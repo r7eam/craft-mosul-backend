@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './stratgies/jwt-auth';
 import { RolesGuard } from './guards/roles.guard';
+import { SeedService } from './seed.service';
 import { UsersModule } from '../users/users.module';
 import { WorkersModule } from '../workers/workers.module';
 
@@ -26,7 +27,7 @@ import { WorkersModule } from '../workers/workers.module';
     WorkersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RolesGuard],
-  exports: [AuthService, RolesGuard],
+  providers: [AuthService, JwtStrategy, RolesGuard, SeedService],
+  exports: [AuthService, RolesGuard, SeedService],
 })
 export class AuthModule {}

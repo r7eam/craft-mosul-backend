@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
@@ -28,9 +27,7 @@ import { WorkersService } from './workers.service';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { UpdateWorkerDto } from './dto/update-worker.dto';
 import { FindWorkersQueryDto } from './dto/find-workers-query.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorators';
 import { CurrentUser } from '../auth/decorators/current-user.decorators';
 
@@ -68,7 +65,6 @@ const workerProfileImageStorage = {
 
 @ApiTags('workers')
 @Controller('workers')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth('JWT-auth')
 export class WorkersController {
   constructor(private readonly workersService: WorkersService) {}
@@ -76,6 +72,7 @@ export class WorkersController {
   @ApiOperation({ summary: 'Create a new worker profile' })
   @ApiResponse({ status: 201, description: 'Worker profile created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Only workers and admins can create profiles' })
+  @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Post()
   create(@Body() dto: CreateWorkerDto) {
@@ -94,6 +91,7 @@ export class WorkersController {
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   @ApiQuery({ name: 'page', required: false, description: 'Page number' })
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get()
   findAll(@Query() query: FindWorkersQueryDto) {
@@ -103,24 +101,28 @@ export class WorkersController {
   @ApiOperation({ summary: 'Get worker by ID' })
   @ApiResponse({ status: 200, description: 'Worker profile found' })
   @ApiResponse({ status: 404, description: 'Worker not found' })
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.workersService.findOne(+id);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get('user/:userId')
   findByUserId(@Param('userId') userId: string) {
     return this.workersService.findByUserId(+userId);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateWorkerDto) {
     return this.workersService.update(+id, dto);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('admin')
   @Delete(':id')
   remove(@Param('id') id: string) {
@@ -144,6 +146,7 @@ export class WorkersController {
   @ApiResponse({ status: 200, description: 'Profile image uploaded successfully' })
   @ApiResponse({ status: 400, description: 'No file uploaded or invalid file type' })
   @ApiResponse({ status: 403, description: 'Forbidden - Can only upload own profile image' })
+  @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Post(':id/upload-profile-image')
   @UseInterceptors(FileInterceptor('image', workerProfileImageStorage))

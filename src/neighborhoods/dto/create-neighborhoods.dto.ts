@@ -1,8 +1,8 @@
 import { IsString, IsNotEmpty, IsIn } from 'class-validator';
 
 export class CreateNeighborhoodDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   name: string;
 
   @IsString()

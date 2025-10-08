@@ -11,6 +11,7 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -56,46 +57,54 @@ const portfolioImageStorage = {
 };
 
 @Controller('worker-portfolio')
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class WorkerPortfolioController {
   constructor(private readonly workerPortfolioService: WorkerPortfolioService) {}
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Post()
   create(@Body() dto: CreateWorkerPortfolioDto, @CurrentUser() user: any) {
     return this.workerPortfolioService.create(dto, user);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get()
   findAll() {
     return this.workerPortfolioService.findAll();
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.workerPortfolioService.findOne(+id);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get('worker/:workerId')
   findByWorkerId(@Param('workerId') workerId: string) {
     return this.workerPortfolioService.findByWorkerId(+workerId);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateWorkerPortfolioDto, @CurrentUser() user: any) {
     return this.workerPortfolioService.update(+id, dto, user);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user: any) {
     return this.workerPortfolioService.remove(+id, user);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Post('upload-with-image')
   @UseInterceptors(FileInterceptor('image', portfolioImageStorage))

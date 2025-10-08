@@ -20,8 +20,8 @@ export class RegisterDto {
   @Length(6, 255)
   password: string;
 
-  @IsIn(['client', 'worker'])
-  role: 'client' | 'worker';
+  @IsIn(['client', 'worker', 'admin'])
+  role: 'client' | 'worker' | 'admin';
 
   @IsOptional()
   @IsNumber()

@@ -6,52 +6,56 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorators';
 import { CurrentUser } from '../auth/decorators/current-user.decorators';
 
 @Controller('reviews')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('client')
   @Post()
   create(@Body() dto: CreateReviewDto, @CurrentUser() user: any) {
     return this.reviewsService.create(dto, user.id);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get()
   findAll() {
     return this.reviewsService.findAll();
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reviewsService.findOne(+id);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Public()
   @Get('worker/:workerId')
   findByWorkerId(@Param('workerId') workerId: string) {
     return this.reviewsService.findByWorkerId(+workerId);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('client', 'admin')
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateReviewDto, @CurrentUser() user: any) {
     return this.reviewsService.update(+id, dto, user);
   }
 
+  @ApiBearerAuth('JWT-auth')
   @Roles('client', 'admin')
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user: any) {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Neighborhood } from './entities/neighborhoods.entity';
@@ -12,9 +12,16 @@ export class NeighborhoodsService {
     private neighborhoodsRepository: Repository<Neighborhood>,
   ) {}
 
-  create(dto: CreateNeighborhoodDto) {
-    const neighborhood = this.neighborhoodsRepository.create(dto);
-    return this.neighborhoodsRepository.save(neighborhood);
+  async create(dto: CreateNeighborhoodDto) {
+    try {
+      const neighborhood = this.neighborhoodsRepository.create(dto);
+      return await this.neighborhoodsRepository.save(neighborhood);
+    } catch (error) {
+      if (error.code === '23505') { // Unique constraint violation
+        throw new ConflictException(`Neighborhood with name '${dto.name}' already exists`);
+      }
+      throw error;
+    }
   }
 
   findAll() {
