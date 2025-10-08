@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Profession } from './entities/professions.entity';
@@ -12,9 +12,17 @@ export class ProfessionsService {
     private professionsRepository: Repository<Profession>,
   ) {}
 
-  create(dto: CreateProfessionDto) {
-    const profession = this.professionsRepository.create(dto);
-    return this.professionsRepository.save(profession);
+  async create(dto: CreateProfessionDto) {
+    try {
+      const profession = this.professionsRepository.create(dto);
+      return await this.professionsRepository.save(profession);
+    } catch (error) {
+      // Postgres unique violation
+      if (error && (error.code === '23505' || error?.driverError?.code === '23505')) {
+        throw new ConflictException(`Profession with name '${dto.name}' already exists`);
+      }
+      throw error;
+    }
   }
 
   findAll() {
