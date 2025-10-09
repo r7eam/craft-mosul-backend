@@ -75,7 +75,12 @@ export class WorkersController {
   @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Post()
-  create(@Body() dto: CreateWorkerDto) {
+  async create(@Body() dto: CreateWorkerDto, @CurrentUser() user: any) {
+  
+    if (user.role === 'worker') {
+      dto.user_id = user.id;
+    }
+
     return this.workersService.create(dto);
   }
 

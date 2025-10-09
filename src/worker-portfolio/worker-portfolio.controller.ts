@@ -11,7 +11,7 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -66,6 +66,10 @@ export class WorkerPortfolioController {
   @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Post()
+  @ApiOperation({ summary: 'Create a new portfolio item' })
+  @ApiResponse({ status: 201, description: 'Portfolio item created successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Worker can only create their own portfolio' })
+  @ApiResponse({ status: 404, description: 'Worker profile not found' })
   create(@Body() dto: CreateWorkerPortfolioDto, @CurrentUser() user: any) {
     return this.workerPortfolioService.create(dto, user);
   }
@@ -109,6 +113,11 @@ export class WorkerPortfolioController {
   @Roles('worker', 'admin')
   @Post('upload-with-image')
   @UseInterceptors(FileInterceptor('image', portfolioImageStorage))
+  @ApiOperation({ summary: 'Create portfolio item with image upload' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Portfolio item created with image successfully' })
+  @ApiResponse({ status: 400, description: 'No image file uploaded or invalid file type' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Worker can only create their own portfolio' })
   async createWithImage(
     @Body() dto: Omit<CreateWorkerPortfolioDto, 'image_url'>,
     @UploadedFile() file: MulterFile,
@@ -122,7 +131,7 @@ export class WorkerPortfolioController {
     
     const portfolioDto: CreateWorkerPortfolioDto = {
       ...dto,
-      worker_id: Number(dto.worker_id),
+      worker_id: dto.worker_id ? Number(dto.worker_id) : undefined,
       image_url: imageUrl,
     };
 

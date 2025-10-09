@@ -23,11 +23,19 @@ export class WorkerPortfolioService {
       });
       
       if (!worker) {
-        throw new NotFoundException('Worker profile not found');
+        throw new NotFoundException('Worker profile not found. Please complete your worker registration first.');
       }
       
-      if (dto.worker_id !== worker.id) {
-        throw new ForbiddenException('You can only add to your own portfolio');
+      // Override the worker_id in DTO to ensure it matches the authenticated worker
+      dto.worker_id = worker.id;
+    } else if (user.role === 'admin') {
+      // Admins can create portfolios for any worker, but validate worker exists
+      const worker = await this.workersRepository.findOne({
+        where: { id: dto.worker_id },
+      });
+      
+      if (!worker) {
+        throw new NotFoundException(`Worker with ID ${dto.worker_id} not found`);
       }
     }
     

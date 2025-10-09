@@ -1,9 +1,10 @@
 import { IsNotEmpty, IsOptional, IsString, IsNumber, IsPositive, IsBoolean, IsUrl, Length } from 'class-validator';
 
 export class CreateWorkerDto {
+  @IsOptional()
   @IsNumber()
   @IsPositive()
-  user_id: number;
+  user_id?: number;
 
   @IsNumber()
   @IsPositive()

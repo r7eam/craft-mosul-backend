@@ -1,9 +1,10 @@
 import { IsString, IsNotEmpty, IsOptional, IsNumber, IsPositive } from 'class-validator';
 
 export class CreateWorkerPortfolioDto {
+  @IsOptional()
   @IsNumber()
   @IsPositive()
-  worker_id: number;
+  worker_id?: number;
 
   @IsString()
   @IsNotEmpty()
