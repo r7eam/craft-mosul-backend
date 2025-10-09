@@ -5,12 +5,15 @@ import { Request } from './entities/request.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
+import { Worker } from '../workers/entities/worker.entity';
 
 @Injectable()
 export class RequestsService {
   constructor(
     @InjectRepository(Request)
     private requestsRepository: Repository<Request>,
+    @InjectRepository(Worker)
+    private workersRepository: Repository<Worker>,
   ) {}
 
   create(dto: CreateRequestDto, clientId: number) {
@@ -58,8 +61,13 @@ export class RequestsService {
     if (user.role === 'client' && request.client_id !== user.id) {
       throw new ForbiddenException('You can only modify your own requests');
     }
-    if (user.role === 'worker' && request.worker_id !== user.id) {
-      throw new ForbiddenException('You can only modify requests assigned to you');
+    if (user.role === 'worker') {
+      const worker = await this.workersRepository.findOne({
+        where: { user_id: user.id }
+      });
+      if (!worker || request.worker_id !== worker.id) {
+        throw new ForbiddenException('You can only modify requests assigned to you');
+      }
     }
     
     Object.assign(request, dto);
@@ -71,7 +79,7 @@ export class RequestsService {
     const request = await this.findOne(id);
     
     // Validate ownership and permissions
-    this.validateStatusUpdatePermissions(request, dto.status, user);
+    await this.validateStatusUpdatePermissions(request, dto.status, user);
     
     // Validate status transition
     this.validateStatusTransition(request.status, dto.status);
@@ -90,7 +98,7 @@ export class RequestsService {
     return this.requestsRepository.save(request);
   }
 
-  private validateStatusUpdatePermissions(request: Request, newStatus: string, user: any) {
+  private async validateStatusUpdatePermissions(request: Request, newStatus: string, user: any) {
     // Client permissions
     if (user.role === 'client') {
       // Client can only modify their own requests
@@ -105,8 +113,17 @@ export class RequestsService {
     
     // Worker permissions  
     if (user.role === 'worker') {
+      // Find worker record for the authenticated user
+      const worker = await this.workersRepository.findOne({
+        where: { user_id: user.id }
+      });
+      
+      if (!worker) {
+        throw new ForbiddenException('Worker profile not found');
+      }
+      
       // Worker can only modify requests assigned to them
-      if (request.worker_id !== user.id) {
+      if (request.worker_id !== worker.id) {
         throw new ForbiddenException('You can only modify requests assigned to you');
       }
       // Worker can accept, reject, or complete requests

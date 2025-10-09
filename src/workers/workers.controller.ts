@@ -182,4 +182,51 @@ export class WorkersController {
       profile_image: imageUrl,
     };
   }
+
+  @ApiOperation({ summary: 'Upload current user profile image (convenience endpoint)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Worker profile image',
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Profile image uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'No file uploaded or invalid file type' })
+  @ApiResponse({ status: 404, description: 'Worker profile not found' })
+  @ApiBearerAuth('JWT-auth')
+  @Roles('worker')
+  @Post('upload-my-profile-image')
+  @UseInterceptors(FileInterceptor('image', workerProfileImageStorage))
+  async uploadMyProfileImage(
+    @UploadedFile() file: MulterFile,
+    @CurrentUser() user: any,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Get worker profile by user ID
+    const worker = await this.workersService.findByUserId(user.id);
+    if (!worker) {
+      throw new BadRequestException('Worker profile not found');
+    }
+
+    const imageUrl = `/uploads/worker-profiles/${file.filename}`;
+    
+    // Update worker's profile_image in database
+    await this.workersService.update(worker.id, { profile_image: imageUrl });
+
+    return {
+      message: 'Worker profile image uploaded successfully',
+      profile_image: imageUrl,
+      worker_id: worker.id,
+    };
+  }
 }

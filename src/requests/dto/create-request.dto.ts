@@ -1,9 +1,10 @@
 import { IsString, IsNotEmpty, IsNumber, IsPositive, IsOptional, IsIn } from 'class-validator';
 
 export class CreateRequestDto {
+  @IsOptional()
   @IsNumber()
   @IsPositive()
-  client_id: number;
+  client_id?: number;
 
   @IsNumber()
   @IsPositive()
