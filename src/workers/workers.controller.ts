@@ -72,6 +72,37 @@ export class WorkersController {
   @ApiOperation({ summary: 'Create a new worker profile' })
   @ApiResponse({ status: 201, description: 'Worker profile created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Only workers and admins can create profiles' })
+  @ApiBody({
+    description: 'Worker profile data',
+    type: CreateWorkerDto,
+    examples: {
+      electrician: {
+        summary: 'Electrician Worker',
+        description: 'Create a new electrician worker profile',
+        value: {
+          profession_id: 1,
+          bio: 'كهربائي محترف مع خبرة 5 سنوات في صيانة وتركيب الأجهزة الكهربائية والإنارة المنزلية والتجارية',
+          experience_years: 5,
+          contact_phone: '07901234568',
+          whatsapp_number: '07901234568',
+          is_available: true
+        }
+      },
+      plumber: {
+        summary: 'Plumber Worker',
+        description: 'Create a new plumber worker profile',
+        value: {
+          profession_id: 2,
+          bio: 'سباك محترف متخصص في إصلاح وتركيب الأنابيب والحنفيات وأجهزة الصرف الصحي',
+          experience_years: 3,
+          contact_phone: '07901234569',
+          whatsapp_number: '07901234569',
+          facebook_url: 'https://facebook.com/plumber.mohammed',
+          is_available: true
+        }
+      }
+    }
+  })
   @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Post()
@@ -120,6 +151,40 @@ export class WorkersController {
     return this.workersService.findByUserId(+userId);
   }
 
+  @ApiOperation({ summary: 'Update worker profile' })
+  @ApiResponse({ status: 200, description: 'Worker profile updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Can only update own profile' })
+  @ApiResponse({ status: 404, description: 'Worker not found' })
+  @ApiBody({
+    description: 'Worker profile update data',
+    type: UpdateWorkerDto,
+    examples: {
+      updateContact: {
+        summary: 'Update Contact Info',
+        description: 'Update worker contact information',
+        value: {
+          contact_phone: '07901234569',
+          whatsapp_number: '07901234569',
+          facebook_url: 'https://facebook.com/mohammed.electrician'
+        }
+      },
+      updateBio: {
+        summary: 'Update Bio and Experience',
+        description: 'Update worker bio and experience',
+        value: {
+          bio: 'كهربائي محترف مع خبرة 7 سنوات في صيانة وتركيب الأجهزة الكهربائية والإنارة المنزلية والتجارية',
+          experience_years: 7
+        }
+      },
+      updateAvailability: {
+        summary: 'Update Availability',
+        description: 'Update worker availability status',
+        value: {
+          is_available: false
+        }
+      }
+    }
+  })
   @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Patch(':id')

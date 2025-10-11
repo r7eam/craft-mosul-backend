@@ -37,6 +37,41 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
+  @ApiBody({
+    description: 'Registration data',
+    type: RegisterDto,
+    examples: {
+      client: {
+        summary: 'Client Registration',
+        description: 'Register a new client user',
+        value: {
+          name: 'أحمد علي محمد',
+          email: 'ahmed@example.com',
+          phone: '07901234567',
+          password: 'password123',
+          role: 'client',
+          neighborhood_id: 1
+        }
+      },
+      worker: {
+        summary: 'Worker Registration',
+        description: 'Register a new worker user',
+        value: {
+          name: 'محمد حسن علي',
+          email: 'mohammed@example.com',
+          phone: '07901234568',
+          password: 'password123',
+          role: 'worker',
+          neighborhood_id: 1,
+          profession_id: 1,
+          bio: 'كهربائي محترف مع خبرة 5 سنوات في صيانة وتركيب الأجهزة الكهربائية',
+          experience_years: 5,
+          contact_phone: '07901234568',
+          whatsapp_number: '07901234568'
+        }
+      }
+    }
+  })
   @ApiBearerAuth('JWT-auth')
   @Public()
   @Post('register')
@@ -47,6 +82,28 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'Login successful, returns JWT token' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiBody({
+    description: 'Login credentials',
+    type: LoginDto,
+    examples: {
+      phoneLogin: {
+        summary: 'Login with Phone',
+        description: 'Login using phone number and password',
+        value: {
+          phone: '07901234567',
+          password: 'password123'
+        }
+      },
+      emailLogin: {
+        summary: 'Login with Email',
+        description: 'Login using email and password',
+        value: {
+          email: 'mohammed@example.com',
+          password: 'password123'
+        }
+      }
+    }
+  })
   @ApiBearerAuth('JWT-auth')
   @Public()
   @Post('login')
@@ -70,6 +127,23 @@ export class AuthController {
     return this.authService.getProfile(user.id);
   }
 
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Current password is incorrect' })
+  @ApiBody({
+    description: 'Password change data',
+    type: ChangePasswordDto,
+    examples: {
+      changePassword: {
+        summary: 'Change Password',
+        description: 'Change user password by providing current and new password',
+        value: {
+          currentPassword: 'oldpassword123',
+          newPassword: 'newpassword456'
+        }
+      }
+    }
+  })
   @ApiBearerAuth('JWT-auth')
   @Patch('change-password')
   async changePassword(

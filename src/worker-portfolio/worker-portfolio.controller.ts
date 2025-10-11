@@ -11,7 +11,7 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -63,13 +63,35 @@ const portfolioImageStorage = {
 export class WorkerPortfolioController {
   constructor(private readonly workerPortfolioService: WorkerPortfolioService) {}
 
-  @ApiBearerAuth('JWT-auth')
-  @Roles('worker', 'admin')
-  @Post()
   @ApiOperation({ summary: 'Create a new portfolio item' })
   @ApiResponse({ status: 201, description: 'Portfolio item created successfully' })
   @ApiResponse({ status: 403, description: 'Forbidden - Worker can only create their own portfolio' })
   @ApiResponse({ status: 404, description: 'Worker profile not found' })
+  @ApiBody({
+    description: 'Portfolio item data',
+    type: CreateWorkerPortfolioDto,
+    examples: {
+      electricalWork: {
+        summary: 'Electrical Work Portfolio',
+        description: 'Add electrical work to portfolio',
+        value: {
+          image_url: '/uploads/portfolio/electrical-work-123.jpg',
+          description: 'مشروع تركيب إنارة LED حديثة في منزل سكني، شمل العمل تركيب جميع وحدات الإنارة وتمديد الأسلاك'
+        }
+      },
+      plumbingWork: {
+        summary: 'Plumbing Work Portfolio',
+        description: 'Add plumbing work to portfolio',
+        value: {
+          image_url: '/uploads/portfolio/plumbing-work-456.jpg',
+          description: 'إصلاح شامل لنظام الصرف الصحي في المطبخ والحمام مع تركيب حنفيات جديدة'
+        }
+      }
+    }
+  })
+  @ApiBearerAuth('JWT-auth')
+  @Roles('worker', 'admin')
+  @Post()
   create(@Body() dto: CreateWorkerPortfolioDto, @CurrentUser() user: any) {
     return this.workerPortfolioService.create(dto, user);
   }
@@ -95,6 +117,31 @@ export class WorkerPortfolioController {
     return this.workerPortfolioService.findByWorkerId(+workerId);
   }
 
+  @ApiOperation({ summary: 'Update portfolio item' })
+  @ApiResponse({ status: 200, description: 'Portfolio item updated successfully' })
+  @ApiResponse({ status: 403, description: 'You can only update your own portfolio items' })
+  @ApiResponse({ status: 404, description: 'Portfolio item not found' })
+  @ApiBody({
+    description: 'Portfolio item update data',
+    type: UpdateWorkerPortfolioDto,
+    examples: {
+      updateDescription: {
+        summary: 'Update Description',
+        description: 'Update portfolio item description',
+        value: {
+          description: 'مشروع تركيب إنارة LED حديثة في منزل سكني (محدث)، شمل العمل تركيب جميع وحدات الإنارة وتمديد الأسلاك مع ضمان سنة كاملة'
+        }
+      },
+      updateImage: {
+        summary: 'Update Image URL',
+        description: 'Update portfolio item image',
+        value: {
+          image_url: '/uploads/portfolio/updated-portfolio-789.jpg',
+          description: 'صورة محدثة للمشروع بعد الانتهاء'
+        }
+      }
+    }
+  })
   @ApiBearerAuth('JWT-auth')
   @Roles('worker', 'admin')
   @Patch(':id')
@@ -109,15 +156,39 @@ export class WorkerPortfolioController {
     return this.workerPortfolioService.remove(+id, user);
   }
 
-  @ApiBearerAuth('JWT-auth')
-  @Roles('worker', 'admin')
-  @Post('upload-with-image')
-  @UseInterceptors(FileInterceptor('image', portfolioImageStorage))
   @ApiOperation({ summary: 'Create portfolio item with image upload' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'Portfolio item created with image successfully' })
   @ApiResponse({ status: 400, description: 'No image file uploaded or invalid file type' })
   @ApiResponse({ status: 403, description: 'Forbidden - Worker can only create their own portfolio' })
+  @ApiBody({
+    description: 'Portfolio item with image upload',
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Portfolio image file'
+        },
+        description: {
+          type: 'string',
+          description: 'Description of the work',
+          example: 'مشروع تركيب إنارة LED حديثة في منزل سكني'
+        },
+        worker_id: {
+          type: 'integer',
+          description: 'Worker ID (optional for workers)',
+          example: 1
+        }
+      },
+      required: ['image']
+    }
+  })
+  @ApiBearerAuth('JWT-auth')
+  @Roles('worker', 'admin')
+  @Post('upload-with-image')
+  @UseInterceptors(FileInterceptor('image', portfolioImageStorage))
   async createWithImage(
     @Body() dto: Omit<CreateWorkerPortfolioDto, 'image_url'>,
     @UploadedFile() file: MulterFile,
