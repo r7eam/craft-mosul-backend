@@ -16,18 +16,10 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    // Check if user already exists by phone
-    const existingByPhone = await this.usersService.findByPhone(registerDto.phone);
-    if (existingByPhone) {
+    // Check if user already exists
+    const existingUser = await this.usersService.findByPhone(registerDto.phone);
+    if (existingUser) {
       throw new ConflictException('User with this phone number already exists');
-    }
-
-    // If email provided, check by email as well to avoid DB unique-constraint errors
-    if (registerDto.email) {
-      const existingByEmail = await this.usersService.findByEmail(registerDto.email);
-      if (existingByEmail) {
-        throw new ConflictException('User with this email already exists');
-      }
     }
 
     // Hash password
@@ -44,24 +36,7 @@ export class AuthService {
       profile_image: registerDto.profile_image,
     };
 
-    let user;
-    try {
-      user = await this.usersService.create(userData);
-    } catch (error) {
-      // convert Postgres unique constraint into a friendly 409 Conflict
-      if (error && (error.code === '23505' || error?.driverError?.code === '23505')) {
-        // attempt to provide helpful message when possible
-        const detail = error?.driverError?.detail || error?.detail || '';
-        if (detail.includes('(phone)')) {
-          throw new ConflictException('User with this phone number already exists');
-        }
-        if (detail.includes('(email)')) {
-          throw new ConflictException('User with this email already exists');
-        }
-        throw new ConflictException('User already exists');
-      }
-      throw error;
-    }
+    const user = await this.usersService.create(userData);
 
     // If user is a worker, create worker profile
     if (registerDto.role === 'worker') {
@@ -131,7 +106,7 @@ export class AuthService {
     await this.usersService.updateLastLogin(user.id);
 
     // Generate JWT token
-    const payload = { sub: user.id, phone: user.phone, role: user.role };
+    const payload = { sub: user.id, phone: user.phone, email: user.email, role: user.role };
     const access_token = this.jwtService.sign(payload);
 
     // Return user data without password

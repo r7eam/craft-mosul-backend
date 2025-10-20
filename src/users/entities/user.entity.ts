@@ -51,9 +51,6 @@ export class User {
   @Column({ default: true })
   is_active: boolean;
 
-  @Column({ nullable: true })
-  profile_image: string;
-
   @CreateDateColumn()
   created_at: Date;
 
