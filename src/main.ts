@@ -34,7 +34,7 @@ async function bootstrap() {
   // CORS: allow frontend origins from env (comma-separated)
   const corsOrigins = configService.get<string>('CORS_ORIGIN')
     ? configService.get<string>('CORS_ORIGIN')!.split(',').map((o) => o.trim())
-    : ['http://localhost:3000', 'http://localhost:5173'];
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
 
   app.enableCors({
     origin: corsOrigins,
