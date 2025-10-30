@@ -29,6 +29,12 @@ export class ProfessionsService {
     return this.professionsRepository.find();
   }
 
+  findActive() {
+    return this.professionsRepository.find({
+      where: { is_active: true }
+    });
+  }
+
   async findOne(id: number) {
     const profession = await this.professionsRepository.findOneBy({ id });
     if (!profession) throw new NotFoundException(`Profession ${id} not found`);

@@ -70,10 +70,13 @@ export class FavoritesService {
   }
 
   async findByClientAndWorker(clientId: number, workerId: number) {
-    return this.favoritesRepository.findOne({
+    const favorite = await this.favoritesRepository.findOne({
       where: { client_id: clientId, worker_id: workerId },
       relations: ['client', 'worker'],
     });
+    
+    // Explicitly return null if not found (instead of undefined)
+    return favorite || null;
   }
 
   async update(id: number, dto: UpdateFavoriteDto) {

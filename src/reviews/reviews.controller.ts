@@ -74,16 +74,16 @@ export class ReviewsController {
 
   @ApiBearerAuth('JWT-auth')
   @Public()
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reviewsService.findOne(+id);
+  @Get('worker/:workerId')
+  findByWorkerId(@Param('workerId') workerId: string) {
+    return this.reviewsService.findByWorkerId(+workerId);
   }
 
   @ApiBearerAuth('JWT-auth')
   @Public()
-  @Get('worker/:workerId')
-  findByWorkerId(@Param('workerId') workerId: string) {
-    return this.reviewsService.findByWorkerId(+workerId);
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.reviewsService.findOne(+id);
   }
 
   @ApiOperation({ summary: 'Update review' })

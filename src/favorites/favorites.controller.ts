@@ -51,12 +51,6 @@ export class FavoritesController {
   }
 
   @ApiBearerAuth('JWT-auth')
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.favoritesService.findOne(+id);
-  }
-
-  @ApiBearerAuth('JWT-auth')
   @Roles('client')
   @Get('client/:clientId')
   findByClientId(@Param('clientId') clientId: string, @CurrentUser() user: any) {
@@ -71,6 +65,12 @@ export class FavoritesController {
     @Param('workerId') workerId: string,
   ) {
     return this.favoritesService.findByClientAndWorker(+clientId, +workerId);
+  }
+
+  @ApiBearerAuth('JWT-auth')
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.favoritesService.findOne(+id);
   }
 
   @ApiOperation({ summary: 'Update favorite' })

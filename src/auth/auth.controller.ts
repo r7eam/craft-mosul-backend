@@ -52,6 +52,15 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @ApiOperation({ summary: 'Seed database with initial data (professions, neighborhoods, admin)' })
+  @ApiResponse({ status: 201, description: 'Database seeded successfully' })
+  @Public()
+  @Post('seed-database')
+  async seedDatabase() {
+    await this.seedService.seedAll();
+    return { message: 'Database seeded successfully' };
+  }
+
   @ApiOperation({ summary: 'Create admin user (for initial setup)' })
   @ApiResponse({ status: 201, description: 'Admin user created successfully' })
   @Public()

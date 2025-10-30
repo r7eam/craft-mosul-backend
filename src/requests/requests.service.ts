@@ -27,14 +27,14 @@ export class RequestsService {
 
   findAll() {
     return this.requestsRepository.find({
-      relations: ['client', 'worker'],
+      relations: ['client', 'client.neighborhood', 'worker', 'worker.user', 'worker.user.neighborhood', 'worker.profession'],
     });
   }
 
   async findOne(id: number) {
     const request = await this.requestsRepository.findOne({
       where: { id },
-      relations: ['client', 'worker'],
+      relations: ['client', 'client.neighborhood', 'worker', 'worker.user', 'worker.user.neighborhood', 'worker.profession'],
     });
     if (!request) throw new NotFoundException(`Request ${id} not found`);
     return request;
@@ -43,14 +43,14 @@ export class RequestsService {
   findByClientId(clientId: number) {
     return this.requestsRepository.find({
       where: { client_id: clientId },
-      relations: ['client', 'worker'],
+      relations: ['client', 'client.neighborhood', 'worker', 'worker.user', 'worker.user.neighborhood', 'worker.profession'],
     });
   }
 
   findByWorkerId(workerId: number) {
     return this.requestsRepository.find({
       where: { worker_id: workerId },
-      relations: ['client', 'worker'],
+      relations: ['client', 'client.neighborhood', 'worker', 'worker.user', 'worker.user.neighborhood', 'worker.profession'],
     });
   }
 

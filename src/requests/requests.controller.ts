@@ -63,13 +63,6 @@ export class RequestsController {
 
   @ApiBearerAuth('JWT-auth')
   @Public()
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.requestsService.findOne(+id);
-  }
-
-  @ApiBearerAuth('JWT-auth')
-  @Public()
   @Get('client/:clientId')
   findByClientId(@Param('clientId') clientId: string) {
     return this.requestsService.findByClientId(+clientId);
@@ -80,6 +73,13 @@ export class RequestsController {
   @Get('worker/:workerId')
   findByWorkerId(@Param('workerId') workerId: string) {
     return this.requestsService.findByWorkerId(+workerId);
+  }
+
+  @ApiBearerAuth('JWT-auth')
+  @Public()
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.requestsService.findOne(+id);
   }
 
   @ApiOperation({ summary: 'Update request details' })

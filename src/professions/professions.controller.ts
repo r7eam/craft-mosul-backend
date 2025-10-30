@@ -74,6 +74,13 @@ export class ProfessionsController {
 
   @ApiBearerAuth('JWT-auth')
   @Public()
+  @Get('active')
+  findActive() {
+    return this.professionsService.findActive();
+  }
+
+  @ApiBearerAuth('JWT-auth')
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.professionsService.findOne(+id);

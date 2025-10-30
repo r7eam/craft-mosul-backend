@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Worker } from '../../workers/entities/worker.entity';
 
 @Entity('requests')
 export class Request {
@@ -24,9 +25,9 @@ export class Request {
   @Column()
   worker_id: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => Worker)
   @JoinColumn({ name: 'worker_id' })
-  worker: User;
+  worker: Worker;
 
   @Column({ type: 'text' })
   problem_description: string;
